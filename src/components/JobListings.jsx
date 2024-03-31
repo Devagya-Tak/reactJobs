@@ -1,18 +1,28 @@
-import { useState, useEffect } from 'react';
-import React from 'react'
+import React, { useState, useEffect } from 'react';
 import JobListing from './JobListing';
-const JobListings = ({ isHome }) => {
-    const [jobs, setJobs] = useState([])
-    const [loading, setLoading] = useState(true)
+import Spinner from './Spinner';
+
+const JobListings = ({ isHome = true }) => {
+    const [jobs, setJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchJobs = async () => {
+            const apiURL = isHome ? '/api/jobs?_limit=3' : '/api/jobs';
+            try {
+                const res = await fetch(apiURL);
+                const data = await res.json();
+                setJobs(data);
+            } catch (error) {
+                console.log('Error fetching data ', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-        const FetchJobs = async () => {
-            const res = await fetch('http://localhost:8000/jobs')
-        }
+        fetchJobs(); // Call the fetchJobs function here
 
-    }, [])
-
+    }, []); // Added isHome as a dependency
 
     return (
         <section className="bg-blue-50 px-4 py-10">
@@ -21,13 +31,18 @@ const JobListings = ({ isHome }) => {
                     {isHome ? 'Recent Jobs' : 'Browse Jobs'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {recentJobs.map((job) => (
-                        <JobListing key={job.id} job={job} />
-                    ))}
+                    {loading ? (<Spinner loading={loading} />) : (
+                        <>
+                            {jobs.map((job) => (
+                                <JobListing key={job.id} job={job} />
+                            ))}
+                        </>
+                    )}
+
                 </div>
             </div>
         </section>
-    )
-}
+    );
+};
 
-export default JobListings  
+export default JobListings;
